@@ -1,6 +1,6 @@
 ---
 title: "STAT/MATH 495: Problem Set 07"
-author: "WRITE YOUR NAME(S) HERE"
+author: "Caleb Brooks"
 date: "2017-10-24"
 output:
   html_document:
@@ -23,6 +23,8 @@ library(tidyverse)
 library(broom)
 library(knitr)
 library(ROCR)
+library(caret)
+library(MLmetrics)
 
 train <- read_csv("data/cs-training.csv") %>% 
   rename(Id = X1)
@@ -47,9 +49,9 @@ Build the binary classifier based on a single predictor variable: `DebtRatio`,
 `age`, or `MonthlyIncome`. Justify this choice.
 
 ```{r}
-boxplot(subset(train, DebtRatio<10)$DebtRatio~subset(train, DebtRatio<10)$SeriousDlqin2yrs)
-boxplot(train$age~train$SeriousDlqin2yrs)
-boxplot(subset(train, MonthlyIncome<100000)$MonthlyIncome~subset(train, MonthlyIncome<100000)$SeriousDlqin2yrs)
+boxplot(log(train$DebtRatio)~train$SeriousDlqin2yrs, ylab = "log(Debt Ratio)", xlab = "Serious delinquency (0 = no, 1 = yes)", title = "Debt ratio by occurance of delinquency")
+boxplot(train$age~train$SeriousDlqin2yrs, ylab = "Age", xlab = "Serious delinquency (0 = no, 1 = yes)", title = "Age by occurance of delinquency")
+boxplot(log(train$MonthlyIncome)~train$SeriousDlqin2yrs, ylab = "log(Monthly income)", xlab = "Serious delinquency (0 = no, 1 = yes)", title = "Monthly income by occurance of delinquency")
 #Age seems to present the clearest difference between the behavior of the response variable
 
 model_formula <- as.formula(train$SeriousDlqin2yrs~train$age)
@@ -89,12 +91,9 @@ Instead of using any predictor information as you did above, switch your
 predictions to random guesses and plot the resulting ROC curve.
 
 ```{r}
-train_augmented_rand <- model_logistic %>% 
-  broom::augment() %>% 
-  as_tibble() %>% 
-  mutate(p_hat_rand = 1/(1+exp(-.fitted)))
 
-pred_2 <- prediction(predictions = train_augmented_rand$p_hat_rand, labels = train_augmented_rand$train.SeriousDlqin2yrs)
+
+pred_2 <- pred_2 <- prediction(predictions = rnorm(150000, .5, .15), labels = train$SeriousDlqin2yrs)
 perf_2 <- performance(pred_2, "tpr","fpr")
 
 auc <- as.numeric(performance(pred_2,"auc")@y.values)
@@ -102,15 +101,14 @@ auc
 
 plot(perf_2, main=paste("Area Under the Curve =", round(auc, 3)))
 abline(c(0, 1), lty=2)
-
-#something's up, will revise
 ```
 
 ```{r}
 #generating predictions
-'log_odds_hat_sub <- predict(model_logistic, newdata=test)
-p_hat_sub <- 1/(1 + exp(-log_odds_hat))
+model_logistic_2 <- glm(model_formula, data=test, family="binomial")
+log_odds_hat_sub <- predict(model_logistic_2, newdata=test)
+p_hat_sub <- 1/(1 + exp(-log_odds_hat_sub))
 submission <- data.frame(p_hat_sub)
-submission[Id] <- test$Id'
+#submission['Id'] <- test$Id
 ```
 
