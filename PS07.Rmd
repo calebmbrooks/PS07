@@ -52,7 +52,6 @@ Build the binary classifier based on a single predictor variable: `DebtRatio`,
 boxplot(log(train$DebtRatio)~train$SeriousDlqin2yrs, ylab = "log(Debt Ratio)", xlab = "Serious delinquency (0 = no, 1 = yes)", title = "Debt ratio by occurance of delinquency")
 boxplot(train$age~train$SeriousDlqin2yrs, ylab = "Age", xlab = "Serious delinquency (0 = no, 1 = yes)", title = "Age by occurance of delinquency")
 boxplot(log(train$MonthlyIncome)~train$SeriousDlqin2yrs, ylab = "log(Monthly income)", xlab = "Serious delinquency (0 = no, 1 = yes)", title = "Monthly income by occurance of delinquency")
-#Age seems to present the clearest difference between the behavior of the response variable
 
 model_formula <- as.formula(train$SeriousDlqin2yrs~train$age)
 model_logistic <- glm(model_formula, data=train, family="binomial")
@@ -72,6 +71,7 @@ auc <- as.numeric(performance(pred,"auc")@y.values)
 auc
 ```
 
+The clearest difference in means seems to between levels of the response variable seems to belong to "age". Even with a log transformation applied to monthly income and debt ratio, the data is too skewed to conduct analysis.
 
 
 # ROC curve
